@@ -1,64 +1,23 @@
 struct segtree {
-  int treeSz = 1;
-  vector<long long> tree;
+  int n;
+  vector<int> t;
 
-  segtree(int arrSz) {
-    while(treeSz < arrSz) treeSz <<= 1;
-    tree.assign(2 * treeSz, 0LL); // NOTE: Identity
+  segtree(int pn) {
+    n = pn;
+    t.assign(2 * n, 0);
+    for(int i = n - 1; i > 0; i--) t[i] = t[i << 1] + t[i << 1 | 1];
   }
 
-  segtree(int arr[], int arrSz) : segtree(arrSz) {
-    build(arr, arrSz, 0, 0, treeSz);
+  void set(int i, int v) {
+    for(t[i += n] = v; i > 1; i >>= 1) t[i >> 1] = t[i] + t[i ^ 1];
   }
 
-  void build(int arr[], int arrSz, int treeIdx, int loArrIdx, int hiArrIdx) {
-    if(hiArrIdx - loArrIdx == 1) {
-      if(loArrIdx < arrSz) {
-        tree[treeIdx] = arr[loArrIdx];
-      }
-      return;
+  int get(int l, int r) {
+    int ret = 0;
+    for(l += n, r += n; l < r; l >>= 1, r >>= 1) {
+      if(l & 1) ret += t[l++];
+      if(r & 1) ret += t[--r];
     }
-
-    int midArrIdx = (loArrIdx + hiArrIdx) / 2;
-    int lTreeIdx = (2 * treeIdx) + 1;
-    int rTreeIdx = (2 * treeIdx) + 2;
-    build(arr, arrSz, lTreeIdx, loArrIdx, midArrIdx);
-    build(arr, arrSz, rTreeIdx, midArrIdx, hiArrIdx);
-    tree[treeIdx] = tree[lTreeIdx] + tree[rTreeIdx]; // NOTE: Operator
-  }
-
-  void set(int arrIdx, int val) {
-    set(arrIdx, val, 0, 0, treeSz);
-  }
-
-  void set(int arrIdx, int val, int treeIdx, int loArrIdx, int hiArrIdx) {
-    if(hiArrIdx - loArrIdx == 1) {
-      tree[treeIdx] = val;
-      return;
-    }
-
-    int midArrIdx = (loArrIdx + hiArrIdx) / 2;
-    int lTreeIdx = (2 * treeIdx) + 1;
-    int rTreeIdx = (2 * treeIdx) + 2;
-    if(arrIdx < midArrIdx) {
-      set(arrIdx, val, lTreeIdx, loArrIdx, midArrIdx);
-    } else {
-      set(arrIdx, val, rTreeIdx, midArrIdx, hiArrIdx);
-    }
-    tree[treeIdx] = tree[lTreeIdx] + tree[rTreeIdx]; // NOTE: Operator
-  }
-
-  long long get(int loArrIdx, int hiArrIdx) {
-    return get(loArrIdx, hiArrIdx, 0, 0, treeSz);
-  }
-
-  long long get(int loArrIdx, int hiArrIdx, int treeIdx, int currLoArrIdx, int currHiArrIdx) {
-    if(hiArrIdx <= currLoArrIdx || currHiArrIdx <= loArrIdx) return 0; // NOTE: Identity
-    if(loArrIdx <= currLoArrIdx && currHiArrIdx <= hiArrIdx) return tree[treeIdx];
-
-    int currMidArrIdx = (currLoArrIdx + currHiArrIdx) / 2;
-    int lTreeIdx = (2 * treeIdx) + 1;
-    int rTreeIdx = (2 * treeIdx) + 2;
-    return get(loArrIdx, hiArrIdx, lTreeIdx, currLoArrIdx, currMidArrIdx) + get(loArrIdx, hiArrIdx, rTreeIdx, currMidArrIdx, currHiArrIdx); // NOTE: Operator
+    return ret;
   }
 };
